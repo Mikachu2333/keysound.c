@@ -1,0 +1,1 @@
+gcc -o KeySound.exe keysound.c -lwinmm
