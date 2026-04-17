@@ -2,6 +2,9 @@
 #include <mmsystem.h>
 #include <stdio.h>
 
+// 退出程序的全局热键ID
+#define HOTKEY_QUIT_ID 1001
+
 // 全局变量：键盘钩子句柄
 HHOOK g_hKeyboardHook = NULL;
 // 音效文件路径（建议使用WAV格式，延迟最低）
@@ -51,7 +54,11 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
         }
         return 1;
     }
-
+    // 注册退出程序的快捷键（作为无控制台窗口的替代）: Ctrl + Shift + Win + Alt + Tab
+    // 另注：MOD_NOREPEAT 取消长按重复触发
+    RegisterHotKey(NULL, HOTKEY_QUIT_ID,
+                   MOD_CONTROL | MOD_SHIFT | MOD_WIN | MOD_ALT | MOD_NOREPEAT,
+                   VK_TAB);
     // 消息循环：保持程序运行，处理系统消息
     MSG msg;
     BOOL bRet;
@@ -60,10 +67,16 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
         if (bRet == -1) {
             break;  // 遇到错误安全退出
         } else {
+            if (msg.message == WM_HOTKEY && msg.wParam == HOTKEY_QUIT_ID) {
+                break;
+            }
             TranslateMessage(&msg);
             DispatchMessageW(&msg);
         }
     }
+
+    // 反注册快捷键
+    UnregisterHotKey(NULL, HOTKEY_QUIT_ID);
 
     // 卸载钩子（程序退出时清理）
     if (g_hKeyboardHook != NULL) {
